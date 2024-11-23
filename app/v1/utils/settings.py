@@ -1,9 +1,11 @@
+#database configuration
 import os
 
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 load_dotenv()
 
+#database credentials
 class Settings(BaseSettings):
     db_name: str = os.getenv('DB_NAME')
     db_usr: str = os.getenv('DB_USER')

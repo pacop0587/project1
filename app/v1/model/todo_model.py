@@ -1,3 +1,4 @@
+#TodoList Model
 from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey
 from sqlalchemy.orm import relatioship
 from sqlalchemy.sql import func
