@@ -1,7 +1,6 @@
-import peewee
-from contextvars import ContextVar
-from fastapi import Depends
-
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from app.v1.utils.settings import Settings
 
 settings = Settings()
@@ -12,35 +11,14 @@ DB_PASS = settings.db_pass
 DB_HOST = settings.db_host
 DB_PORT = settings.db_port
 
-db_state_default = {'cloded':None, 'conn':None, 'ctx':None, 'transactions':None}
-db_state = ContextVar('db_state', default=db_state_default.copy())
+SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-class PeeweeConnectionState(peewee._ConnectionState):
-    def __inint__(self, **kwargs):
-        super().__setattr__('state', db_state)
-        super().__init__(**kwargs)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-    def __setattr__(self, name, value):
-        self._state.get()[name] = value
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    def __getatrr__(self, name):
-        return self._state.get()[name]
-    
-db = peewee.PostgresqlDatabase(DB_NAME, user = DB_USER, password = DB_PASS, host = DB_HOST, port = DB_PORT)
+Base = declarative_base()
 
-db._state = PeeweeConnectionState()
-
-async def reset_db_state():
-    db._state._state.set(db_state_default.copy())
-    db._state.reset()
-
-def get_db(db_state=Depends(reset_db_state)):
-    try:
-        db.connect()
-        yield
-    finally:
-        if not db.is_closed():
-            db.close()
 
 
 
